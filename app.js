@@ -6,14 +6,11 @@ import catchAsync from "./utils/catchAsync.js";
 
 const app = express();
 
-app.use(express.json());
+if (process.env.NODE_ENV === "DEVELOPMENT") {
+  app.use(morgan("dev")); // 'dev' format provides concise output with response status and time
+}
 
-app.get(
-  "/",
-  catchAsync(async (req, res) => {
-    res.send("Hi there");
-  })
-);
+app.use(express.json());
 
 app.get(
   "/health",
