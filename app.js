@@ -6,6 +6,7 @@ import catchAsync from "./utils/catchAsync.js";
 import helmet from "helmet";
 import cors from "cors";
 import hpp from "hpp";
+import morgan from "morgan";
 
 const app = express();
 
