@@ -1,0 +1,476 @@
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/.env
+PORT=3000
+DB_STRING=mongodb+srv://singhsarthakindia:<db_password>@cluster0.jua1b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+DB_PASSWORD=mr44BePN8XeEMwtT
+NODE_ENV=DEVELOPMENT
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/.gitignore
+.env 
+node_modules/
+.git/
+#*.txt
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/.gitignore.txt
+.env 
+node_modules/
+.git/
+*.txt
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/app.js
+import express from "express";
+import comicBookRoutes from "./routes/comicBookRoutes.js";
+import errorHandler from "./middleware/errorHandler.js";
+import notFound from "./middleware/notFound.js";
+import catchAsync from "./utils/catchAsync.js";
+import helmet from "helmet";
+import cors from "cors";
+import hpp from "hpp";
+import morgan from "morgan";
+
+const app = express();
+
+app.use(helmet());
+app.use(cors());
+app.use(hpp());
+
+if (process.env.NODE_ENV === "DEVELOPMENT") {
+  app.use(morgan("dev"));
+}
+
+app.use(express.json());
+
+app.get(
+  "/health",
+  catchAsync(async (req, res) => {
+    res.json({ status: "OK", serverTime: new Date().toISOString() });
+  })
+);
+
+app.use("/api/v1/comicBooks", comicBookRoutes);
+
+app.use(notFound);
+
+app.use(errorHandler);
+
+export default app;
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/config/db.js
+import mongoose from "mongoose";
+
+const db = process.env.DB_STRING.replace(
+  "<db_password>",
+  process.env.DB_PASSWORD
+);
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect(db);
+    console.log("MongoDB Connected");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error.message);
+    process.exit(1);
+  }
+};
+
+export default connectDB;
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/controllers/comicBookController.js
+import ComicBook from "../models/ComicBook.js";
+import AppError from "../utils/AppError.js";
+import catchAsync from "../utils/catchAsync.js";
+import slugify from 'slugify';
+
+
+export const createComicBook = catchAsync(async (req, res, next) => {
+  // Check if a comic book with the same slug already exists
+  const existingComicBook = await ComicBook.findOne({ slug: slugify(req.body.name, { lower: true }) });
+  if (existingComicBook) {
+    return next(new AppError('Slug must be unique. This slug is already in use.', 400));
+  }
+
+  // Create a new comic book instance with the request body data
+  const comicBook = new ComicBook(req.body);
+
+  // Save the comic book to the database
+  await comicBook.save();
+
+  // Send a response with the created comic book
+  res.status(201).json({
+    success: true,
+    data: comicBook
+  });
+});
+
+// Get All Comic Books (with filtering, pagination, and sorting)
+export const getComicBooks = catchAsync(async (req, res, next) => {
+  const { page = 1, limit = 10, sort = "createdAt", ...filters } = req.query;
+  const options = {
+    skip: (page - 1) * limit,
+    limit: parseInt(limit),
+    sort: { [sort]: 1 }, // Default to ascending order
+  };
+
+  const comics = await ComicBook.find(filters, null, options).select("-__v -createdAt -updatedAt");
+  const total = await ComicBook.countDocuments(filters);
+
+  res.status(200).json({
+    success: true,
+    totalItems: total,
+    totalPages: Math.ceil(total / limit),
+    currentPage: page,
+    data: comics
+  });
+});
+
+// Get Comic Book by ID
+export const getComicBookById = catchAsync(async (req, res, next) => {
+  const comicBook = await ComicBook.findById(req.params.id).select("-__v");
+
+  if (!comicBook) {
+    return next(new AppError("Comic Book not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: comicBook
+  });
+});
+
+// Update a Comic Book
+export const updateComicBook = catchAsync(async (req, res, next) => {
+  // Find the comic book by ID
+  const comicBook = await ComicBook.findById(req.params.id);
+
+  // Check if the comic book exists
+  if (!comicBook) {
+    return next(new AppError("Comic Book not found", 404));
+  }
+
+  // Update the comic book fields with the new data from req.body
+  Object.keys(req.body).forEach((key) => {
+    comicBook[key] = req.body[key];
+  });
+
+  // Save the updated comic book
+  await comicBook.save();
+
+  res.status(200).json({
+    success: true,
+    data: comicBook,
+  });
+});
+
+// Delete a Comic Book
+export const deleteComicBook = catchAsync(async (req, res, next) => {
+  const comicBook = await ComicBook.findByIdAndDelete(req.params.id);
+  if (!comicBook) {
+    return next(new AppError("Comic Book not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Comic Book deleted successfully",
+  });
+});
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/folder_structure.txt
+.
+./.env
+./.gitignore
+./.gitignore.txt
+./app.js
+./config
+./config/db.js
+./controllers
+./controllers/comicBookController.js
+./folder_structure.txt
+./middleware
+./middleware/errorHandler.js
+./middleware/notFound.js
+./models
+./models/ComicBook.js
+./mongo.txt
+./package-lock.json
+./package.json
+./README.md
+./routes
+./routes/comicBookRoutes.js
+./scripts
+./scripts/codeExtractor.txt
+./scripts/projectStructureExtractor.txt
+./server.js
+./utils
+./utils/AppError.js
+./utils/catchAsync.js
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/middleware/errorHandler.js
+const errorHandler = (err, req, res, next) => {
+    err.statusCode = err.statusCode || 500;
+    err.status = err.status || "error";
+  
+    res.status(err.statusCode).json({
+      success: false,
+      status: err.status,
+      message: err.message,
+      stack: process.env.NODE_ENV === "DEVELOPMENT" ? err.stack : undefined,
+    });
+  };
+  
+  export default errorHandler;
+  
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/middleware/notFound.js
+import AppError from '../utils/AppError.js'; // Adjust the import path as necessary
+
+const notFound = (req, res, next) => {
+  // Create a new instance of AppError for not found
+  const error = new AppError(`Route ${req.originalUrl} not found`, 404);
+  
+  // Pass the error to the next middleware (error handler)
+  next(error);
+};
+
+export default notFound;
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/models/ComicBook.js
+import mongoose from 'mongoose';
+import slugify from 'slugify'; // Optionally, for generating slugs from book name
+
+const { Schema, model } = mongoose;
+
+const comicBookSchema = new Schema(
+    {
+      name: {
+        type: String,
+        required: [true, 'Comic book name is required'],
+        trim: true,
+        minlength: [2, 'Comic book name must be at least 2 characters long'],
+        maxlength: [100, 'Comic book name cannot exceed 100 characters'],
+        index: true, // Adding index to improve query performance on name field
+      },
+      slug: {
+        type: String,
+        unique: true,
+      },
+      author: {
+        type: String,
+        required: [true, 'Author name is required'],
+        trim: true,
+        minlength: [2, 'Author name must be at least 2 characters long'],
+        maxlength: [100, 'Author name cannot exceed 100 characters'],
+        index: true, // Adding index for author as well
+      },
+      year: {
+        type: Number,
+        required: [true, 'Year of publication is required'],
+        min: [1900, 'Year must be greater than or equal to 1900'],
+        max: [new Date().getFullYear(), 'Year cannot be in the future'],
+      },
+      price: {
+        type: Number,
+        required: [true, 'Price is required'],
+        min: [0, 'Price must be a positive number'],
+      },
+      discount: {
+        type: Number,
+        default: 0,
+        min: [0, 'Discount cannot be negative'],
+        max: [100, 'Discount cannot exceed 100%'],
+        validate: {
+          validator: function (value) {
+            // Ensure discount is less than or equal to 100% of the price
+            return value <= this.price;
+          },
+          message: 'Discount cannot exceed the product price',
+        },
+      },
+      pages: {
+        type: Number,
+        min: [1, 'Number of pages must be at least 1'],
+        validate: {
+          validator: Number.isInteger,
+          message: 'Number of pages must be an integer',
+        },
+      },
+      condition: {
+        type: String,
+        enum: {
+          values: ['new', 'used'],
+          message: 'Condition must be either "new" or "used"',
+        },
+        required: [true, 'Condition is required'],
+      },
+      description: {
+        type: String,
+        trim: true,
+        maxlength: [500, 'Description cannot exceed 500 characters'],
+        default: '',
+      }
+    },
+    {
+      timestamps: true,
+      toJSON: { virtuals: true }, // Include virtuals when converting to JSON
+      toObject: { virtuals: true }, // Include virtuals when converting to plain objects
+    }
+  );
+// Virtual to calculate final price after discount
+comicBookSchema.virtual('finalPrice').get(function() {
+  return this.price - this.discount;
+});
+
+// Pre-save hook to generate slug from name (useful for SEO-friendly URLs)
+comicBookSchema.pre('save', function (next) {
+  // Generate slug if name is modified or if the document is new
+  if (this.isModified('name') || this.isNew) {
+    this.slug = slugify(this.name, { lower: true });
+  }
+
+  next();
+});
+
+
+// Indexing fields to improve query performance
+comicBookSchema.index({ name: 1, author: 1 }); // Compound index for name and author
+
+const ComicBook = model('ComicBook', comicBookSchema);
+
+export default ComicBook;
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/mongo.txt
+Create new project 
+Create cluster
+Connect to cluster
+Create a user
+Save password in .env 
+Choose a connection method > drivers
+copy string 
+Whitelist 0.0.0.0
+Connect to compass
+
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/package.json
+{
+  "name": "comic-store-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --env-file=.env server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "helmet": "^8.0.0",
+    "hpp": "^0.2.3",
+    "mongoose": "^8.7.1",
+    "morgan": "^1.10.0",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/README.md
+# comic-store-backend
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/routes/comicBookRoutes.js
+import express from "express";
+import {
+  createComicBook,
+  getComicBooks,
+  getComicBookById,
+  updateComicBook,
+  deleteComicBook,
+} from "../controllers/comicBookController.js";
+
+const router = express.Router();
+
+router.route("/").post(createComicBook).get(getComicBooks);
+
+router
+  .route("/:id")
+  .get(getComicBookById)
+  .patch(updateComicBook)
+  .delete(deleteComicBook);
+
+export default router;
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/scripts/codeExtractor.txt
+$ find . -type f -exec sh -c 'echo "File: $(realpath {})" >> output.txt; cat {} >> output.txt; echo -e "\n" >> output.txt' \;
+
+
+find . -type f ! -path './node_modules/*' ! -path './.git/*' ! -name 'package-lock.json' -exec sh -c 'echo "File: $(realpath {})" >> output.txt; cat {} >> output.txt; echo -e "\n" >> output.txt' \;
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/scripts/projectStructureExtractor.txt
+find . \( -name "node_modules" -o -name ".git" \) -prune -o -print > folder_structure.txt
+
+
+find . \( -name "node_modules" -o -name ".git" \) -prune -o -print
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/server.js
+import app from "./app.js";
+import connectDB from "./config/db.js";
+
+const PORT = process.env.PORT || 3000;
+
+process.on("uncaughtException", (err) => {
+  console.log("Uncaught Exception! Shutting down...");
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
+connectDB();
+
+const server = app.listen(PORT, () => {
+  console.log(`Server running on PORT ${PORT}`);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.log("Unhandled Rejection! Shutting down...");
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/utils/AppError.js
+class AppError extends Error {
+    constructor(message, statusCode) {
+      super(message);
+      this.statusCode = statusCode;
+      this.status = `${statusCode}`.startsWith("4") ? "fail" : "error";
+      this.isOperational = true;
+  
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+  
+  export default AppError;
+  
+
+File: /d/Downloads/desktop se laya hun/Important Study Material/comic-store-backend/utils/catchAsync.js
+const catchAsync = (fn) => (req, res, next) => {
+  fn(req, res, next).catch(next);
+};
+
+export default catchAsync;
+
+
