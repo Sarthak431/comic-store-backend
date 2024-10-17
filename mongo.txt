@@ -1,0 +1,10 @@
+Create new project 
+Create cluster
+Connect to cluster
+Create a user
+Save password in .env 
+Choose a connection method > drivers
+copy string 
+Whitelist 0.0.0.0
+Connect to compass
+
