@@ -3,6 +3,7 @@ import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 import slugify from "slugify";
 
+// Create a new comic book
 export const createComicBook = catchAsync(async (req, res, next) => {
   const existingComicBook = await ComicBook.findOne({
     slug: slugify(req.body.name, { lower: true }),
@@ -14,7 +15,6 @@ export const createComicBook = catchAsync(async (req, res, next) => {
   }
 
   const comicBook = new ComicBook(req.body);
-
   await comicBook.save();
 
   res.status(201).json({
@@ -23,6 +23,7 @@ export const createComicBook = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get all comic books with pagination and filtering
 export const getComicBooks = catchAsync(async (req, res, next) => {
   const { page = 1, limit = 10, sort = "createdAt", ...filters } = req.query;
   const options = {
@@ -48,6 +49,7 @@ export const getComicBooks = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get a comic book by ID
 export const getComicBookById = catchAsync(async (req, res, next) => {
   const comicBook = await ComicBook.findById(req.params.id).select("-__v");
 
@@ -61,6 +63,22 @@ export const getComicBookById = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get a comic book by slug
+export const getComicBookBySlug = catchAsync(async (req, res, next) => {
+  const comicBook = await ComicBook.findOne({ slug: req.params.slug }).select("-__v");
+
+  if (!comicBook) {
+    return next(new AppError("Comic Book not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: comicBook,
+  });
+});
+
+
+// Update a comic book
 export const updateComicBook = catchAsync(async (req, res, next) => {
   const comicBook = await ComicBook.findById(req.params.id);
 
@@ -80,6 +98,7 @@ export const updateComicBook = catchAsync(async (req, res, next) => {
   });
 });
 
+// Delete a comic book
 export const deleteComicBook = catchAsync(async (req, res, next) => {
   const comicBook = await ComicBook.findByIdAndDelete(req.params.id);
 

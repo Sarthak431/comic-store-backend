@@ -3,6 +3,7 @@ import {
   createComicBook,
   getComicBooks,
   getComicBookById,
+  getComicBookBySlug,
   updateComicBook,
   deleteComicBook,
 } from "../controllers/comicBookController.js";
@@ -16,5 +17,7 @@ router
   .get(getComicBookById)
   .patch(updateComicBook)
   .delete(deleteComicBook);
+
+router.route("/slug/:slug").get(getComicBookBySlug);
 
 export default router;

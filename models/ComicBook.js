@@ -83,10 +83,12 @@ const comicBookSchema = new Schema(
   }
 );
 
+// Virtual field to calculate final price after discount
 comicBookSchema.virtual("finalPrice").get(function () {
   return this.price - this.discount;
 });
 
+// Pre-save hook to create slug
 comicBookSchema.pre("save", function (next) {
   if (this.isModified("name") || this.isNew) {
     this.slug = slugify(this.name, { lower: true });
@@ -95,6 +97,7 @@ comicBookSchema.pre("save", function (next) {
   next();
 });
 
+// Index to speed up search
 comicBookSchema.index({ name: 1, author: 1 });
 
 const ComicBook = model("ComicBook", comicBookSchema);

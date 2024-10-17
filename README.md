@@ -20,7 +20,7 @@ The Comic Store Backend is a RESTful API built using Node.js, Express, and Mongo
 ## Features
 - Create a new comic book entry.
 - Retrieve a list of all comic books with filtering, sorting, and pagination.
-- Get details of a specific comic book by its ID.
+- Get details of a specific comic book by its ID or slug.
 - Update the information of an existing comic book.
 - Delete a comic book from the collection.
 - Comprehensive error handling for invalid requests.
@@ -116,7 +116,12 @@ Here's a breakdown of the environment variables required for the project:
 - **Method**: GET
 - **Description**: Retrieve a comic book's details by its ID.
 
-### 5. Update a Comic Book
+### 5. Get a Comic Book by Slug
+- **Endpoint**: `/api/v1/comicBooks/slug/:slug`
+- **Method**: GET
+- **Description**: Retrieve a comic book's details by its slug.
+
+### 6. Update a Comic Book
 - **Endpoint**: `/api/v1/comicBooks/:id`
 - **Method**: PATCH
 - **Description**: Update the details of a specific comic book.
@@ -129,7 +134,7 @@ Here's a breakdown of the environment variables required for the project:
   }
   ```
 
-### 6. Delete a Comic Book
+### 7. Delete a Comic Book
 - **Endpoint**: `/api/v1/comicBooks/:id`
 - **Method**: DELETE
 - **Description**: Remove a comic book from the collection.
