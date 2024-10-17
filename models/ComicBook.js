@@ -69,6 +69,12 @@ const comicBookSchema = new Schema(
       maxlength: [500, "Description cannot exceed 500 characters"],
       default: "",
     },
+    quantity: {
+      type: Number,
+      required: [true, "Quantity is required"],
+      min: [0, "Quantity cannot be negative"],
+      default: 0,
+    },
   },
   {
     timestamps: true,

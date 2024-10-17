@@ -24,6 +24,7 @@ The Comic Store Backend is a RESTful API built using Node.js, Express, and Mongo
 - Update the information of an existing comic book.
 - Delete a comic book from the collection.
 - Comprehensive error handling for invalid requests.
+- Manage the quantity of comic books in inventory.
 
 ## Prerequisites
 - **Node.js** (v14 or higher)
@@ -96,7 +97,8 @@ Here's a breakdown of the environment variables required for the project:
     "discount": 2,
     "pages": 120,
     "condition": "new",
-    "description": "A brief description of the comic book."
+    "description": "A brief description of the comic book.",
+    "quantity": 10
   }
   ```
 
@@ -122,7 +124,8 @@ Here's a breakdown of the environment variables required for the project:
   ```json
   {
     "name": "Updated Comic Book Name",
-    "price": 18.99
+    "price": 18.99,
+    "quantity": 5
   }
   ```
 

@@ -19,7 +19,7 @@ export const createComicBook = catchAsync(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
-    data: comicBook
+    data: comicBook,
   });
 });
 
@@ -31,7 +31,11 @@ export const getComicBooks = catchAsync(async (req, res, next) => {
     sort: { [sort]: 1 },
   };
 
-  const comics = await ComicBook.find(filters, { __v: 0, createdAt: 0, updatedAt: 0 }, options);
+  const comics = await ComicBook.find(
+    filters,
+    { __v: 0, createdAt: 0, updatedAt: 0 },
+    options
+  );
 
   const total = await ComicBook.countDocuments(filters);
 
@@ -78,7 +82,7 @@ export const updateComicBook = catchAsync(async (req, res, next) => {
 
 export const deleteComicBook = catchAsync(async (req, res, next) => {
   const comicBook = await ComicBook.findByIdAndDelete(req.params.id);
-  
+
   if (!comicBook) {
     return next(new AppError("Comic Book not found", 404));
   }
