@@ -5,6 +5,7 @@ import slugify from "slugify";
 
 // Create a new comic book
 export const createComicBook = catchAsync(async (req, res, next) => {
+  // Check if a comic book with the same slug already exists
   const existingComicBook = await ComicBook.findOne({
     slug: slugify(req.body.name, { lower: true }),
   });
@@ -25,16 +26,17 @@ export const createComicBook = catchAsync(async (req, res, next) => {
 
 // Get all comic books with pagination and filtering
 export const getComicBooks = catchAsync(async (req, res, next) => {
+  // Destructure and set default values for pagination and sorting
   const { page = 1, limit = 10, sort = "createdAt", ...filters } = req.query;
   const options = {
-    skip: (page - 1) * limit,
+    skip: (page - 1) * limit, // Skip documents for pagination
     limit: parseInt(limit),
-    sort: { [sort]: 1 },
+    sort: { [sort]: 1 }, // Sort by the specified field (default: createdAt)
   };
 
   const comics = await ComicBook.find(
     filters,
-    { __v: 0, createdAt: 0, updatedAt: 0 },
+    { __v: 0, createdAt: 0, updatedAt: 0 }, // Exclude these fields from results
     options
   );
 
@@ -51,7 +53,7 @@ export const getComicBooks = catchAsync(async (req, res, next) => {
 
 // Get a comic book by ID
 export const getComicBookById = catchAsync(async (req, res, next) => {
-  const comicBook = await ComicBook.findById(req.params.id).select("-__v");
+  const comicBook = await ComicBook.findById(req.params.id).select("-__v"); // Exclude __v field
 
   if (!comicBook) {
     return next(new AppError("Comic Book not found", 404));
@@ -77,7 +79,6 @@ export const getComicBookBySlug = catchAsync(async (req, res, next) => {
   });
 });
 
-
 // Update a comic book
 export const updateComicBook = catchAsync(async (req, res, next) => {
   const comicBook = await ComicBook.findById(req.params.id);
@@ -86,6 +87,7 @@ export const updateComicBook = catchAsync(async (req, res, next) => {
     return next(new AppError("Comic Book not found", 404));
   }
 
+  // Update comic book fields with new data from the request body
   Object.keys(req.body).forEach((key) => {
     comicBook[key] = req.body[key];
   });

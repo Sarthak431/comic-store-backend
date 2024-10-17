@@ -15,7 +15,7 @@ const comicBookSchema = new Schema(
     },
     slug: {
       type: String,
-      unique: true,
+      unique: true, // Ensure each comic book has a unique slug
     },
     author: {
       type: String,
@@ -41,6 +41,7 @@ const comicBookSchema = new Schema(
       min: [0, "Discount cannot be negative"],
       max: [100, "Discount cannot exceed 100%"],
       validate: {
+        // Ensure the discount is less than or equal to the price
         validator: function (value) {
           return value <= this.price;
         },
@@ -51,6 +52,7 @@ const comicBookSchema = new Schema(
       type: Number,
       min: [1, "Number of pages must be at least 1"],
       validate: {
+        // Ensure pages is an integer
         validator: Number.isInteger,
         message: "Number of pages must be an integer",
       },
@@ -77,7 +79,7 @@ const comicBookSchema = new Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Automatically manage `createdAt` and `updatedAt`
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
@@ -88,16 +90,15 @@ comicBookSchema.virtual("finalPrice").get(function () {
   return this.price - this.discount;
 });
 
-// Pre-save hook to create slug
+// Pre-save hook to generate slug from the comic book name
 comicBookSchema.pre("save", function (next) {
   if (this.isModified("name") || this.isNew) {
     this.slug = slugify(this.name, { lower: true });
   }
-
   next();
 });
 
-// Index to speed up search
+// Compound index to speed up search by name and author
 comicBookSchema.index({ name: 1, author: 1 });
 
 const ComicBook = model("ComicBook", comicBookSchema);
