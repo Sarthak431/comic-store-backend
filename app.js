@@ -9,14 +9,12 @@ import hpp from "hpp";
 
 const app = express();
 
-
-// Security measures
 app.use(helmet());
 app.use(cors());
 app.use(hpp());
 
 if (process.env.NODE_ENV === "DEVELOPMENT") {
-  app.use(morgan("dev")); // 'dev' format provides concise output with response status and time
+  app.use(morgan("dev"));
 }
 
 app.use(express.json());
