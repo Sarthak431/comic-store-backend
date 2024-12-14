@@ -41,22 +41,26 @@ const comicBookSchema = new Schema(
       min: [0, "Discount cannot be negative"],
       max: [100, "Discount cannot exceed 100%"],
       validate: {
-        // Ensure the discount is less than or equal to the price
+        // Ensure the discount percentage translates correctly in relation to price
         validator: function (value) {
-          return value <= this.price;
+          const discountValue = (value / 100) * this.price;
+          return discountValue <= this.price;
         },
-        message: "Discount cannot exceed the product price",
+        message: "Discount amount cannot exceed the product price",
       },
-    },
+    },    
     pages: {
       type: Number,
       min: [1, "Number of pages must be at least 1"],
       validate: {
         // Ensure pages is an integer
-        validator: Number.isInteger,
+        validator: function (value) {
+          return Number.isInteger(value);
+        },
         message: "Number of pages must be an integer",
       },
     },
+    
     condition: {
       type: String,
       enum: {
@@ -87,7 +91,7 @@ const comicBookSchema = new Schema(
 
 // Virtual field to calculate final price after discount
 comicBookSchema.virtual("finalPrice").get(function () {
-  return this.price - this.discount;
+  return this.price - (this.price*(this.discount/100));
 });
 
 // Pre-save hook to generate slug from the comic book name
